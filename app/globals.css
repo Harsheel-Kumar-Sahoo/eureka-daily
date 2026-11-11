@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #FFFFFF;
+  --ink: #111318;
+  --muted: #6E7380;
+  --line: #E6E8EC;
+  --accent: #2748D8;
+}
+.dark {
+  --bg: #0C0D10;
+  --ink: #F2F3F5;
+  --muted: #8F94A0;
+  --line: #23252B;
+  --accent: #7C96FF;
+}
+
+body { background: var(--bg); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Skeleton: gentle opacity pulse; disabled for reduced-motion users */
+@keyframes pulse-soft { 50% { opacity: .4; } }
+.skeleton { background: var(--line); border-radius: 4px; animation: pulse-soft 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
