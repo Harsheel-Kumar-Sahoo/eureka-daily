@@ -14,7 +14,7 @@ export async function GET(req) {
   const diff = (Date.parse(date) - Date.now()) / 864e5;
   if (diff < -2 || diff > 10) return NextResponse.json({ error: "Date out of range" }, { status: 400 });
 
-  const key = `eureka:${date}`;
+  const key = `eureka:v2:${date}`;
   const hit = await getCached(key);
   if (hit) return NextResponse.json(hit);
 
@@ -28,4 +28,4 @@ export async function GET(req) {
     console.error("[/api/day]", e.message);
     return NextResponse.json({ error: "Research failed", detail: e.message }, { status: 502 });
   }
-} 
+}

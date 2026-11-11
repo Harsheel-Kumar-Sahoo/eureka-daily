@@ -14,8 +14,8 @@ export async function GET(req) {
   const done = [], failed = [];
   for (let i = 0; i <= 8; i++) {
     const date = new Date(Date.now() + i * 864e5).toISOString().slice(0, 10);
-    if (await getCached(`eureka:${date}`)) continue;
-    try { await setCached(`eureka:${date}`, await generateDay(date)); done.push(date); }
+    if (await getCached(`eureka:v2:${date}`)) continue;
+    try { await setCached(`eureka:v2:${date}`, await generateDay(date)); done.push(date); }
     catch (e) { console.error(date, e); failed.push(date); }
   }
   return NextResponse.json({ done, failed });

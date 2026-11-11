@@ -6,12 +6,20 @@ const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap
 
 const title = "Eureka Daily: Science, Every Day";
 const description =
-  "Discover what is special about every day in science: discoveries, scientist birthdays, launches, experiments and official observances, each in a 100-word read.";
+  "Discover what is special about every day in science, worldwide and in India: discoveries, scientist birthdays, launches, experiments and official observances, each in a 100-word read.";
 
 export const metadata = {
   title, description,
   openGraph: { title, description, type: "website", siteName: "Eureka Daily" },
   twitter: { card: "summary", title, description },
+};
+
+// Colors the browser UI (mobile address bar) to match the theme.
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAFB" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0C0F" },
+  ],
 };
 
 // Runs before paint so the saved theme never flashes.
@@ -21,7 +29,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
-      <body className="font-serif antialiased">{children}</body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }

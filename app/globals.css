@@ -3,24 +3,57 @@
 @tailwind utilities;
 
 :root {
-  --bg: #FFFFFF;
-  --ink: #111318;
-  --muted: #6E7380;
-  --line: #E6E8EC;
-  --accent: #2748D8;
+  --bg: #FAFAFB;
+  --card: #FFFFFF;
+  --ink: #0F1117;
+  --body: #3A3F4D;
+  --muted: #6B7080;
+  --line: #E8EAEF;
+  --accent: #4F46E5;
+  --accent-soft: rgba(79, 70, 229, 0.08);
 }
 .dark {
-  --bg: #0C0D10;
+  --bg: #0B0C0F;
+  --card: #131419;
   --ink: #F2F3F5;
-  --muted: #8F94A0;
-  --line: #23252B;
-  --accent: #7C96FF;
+  --body: #C3C7D1;
+  --muted: #8B90A0;
+  --line: #24262E;
+  --accent: #8B9BFF;
+  --accent-soft: rgba(139, 155, 255, 0.12);
 }
 
+html { scroll-behavior: smooth; }
 body { background: var(--bg); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
 
-/* Skeleton: gentle opacity pulse; disabled for reduced-motion users */
+/* Frosted sticky header */
+.glass {
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+}
+
+/* Category chips: color comes from --h (hue) set inline */
+.chip {
+  color: hsl(var(--h) 62% 40%);
+  background: hsl(var(--h) 85% 50% / 0.10);
+}
+.dark .chip {
+  color: hsl(var(--h) 90% 76%);
+  background: hsl(var(--h) 80% 60% / 0.14);
+}
+
+/* Soft entrance for cards */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-up { opacity: 0; animation: fade-up .45s ease-out forwards; }
+
+/* Skeleton: gentle opacity pulse */
 @keyframes pulse-soft { 50% { opacity: .4; } }
-.skeleton { background: var(--line); border-radius: 4px; animation: pulse-soft 1.6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+.skeleton { background: var(--line); border-radius: 6px; animation: pulse-soft 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+  .fade-up { animation: none; opacity: 1; }
+  html { scroll-behavior: auto; }
+}

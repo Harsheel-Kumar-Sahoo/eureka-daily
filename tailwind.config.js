@@ -5,8 +5,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: "var(--bg)", ink: "var(--ink)", muted: "var(--muted)",
-        line: "var(--line)", accent: "var(--accent)",
+        bg: "var(--bg)", card: "var(--card)", ink: "var(--ink)", body: "var(--body)",
+        muted: "var(--muted)", line: "var(--line)", accent: "var(--accent)", soft: "var(--accent-soft)",
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Georgia", "serif"],

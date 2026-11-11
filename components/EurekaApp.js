@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Logo from "./Logo";
+import { Icon, CATEGORY_META } from "./Icons";
 
 const pad = (n) => String(n).padStart(2, "0");
 /** YYYY-MM-DD in the visitor's LOCAL timezone (not UTC). */
@@ -8,21 +10,75 @@ const fromISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new 
 
 /** The 7-day strip, computed on the client so "today" follows the visitor's timezone. */
 function buildDays() {
-  const labels = ["Today", "Tomorrow", "Day after"];
   const now = new Date();
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    const sub = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" });
-    return { iso: toISO(d), label: labels[i] || sub };
+    return {
+      iso: toISO(d),
+      top: i === 0 ? "Today" : d.toLocaleDateString("en-GB", { weekday: "short" }),
+      num: d.getDate(),
+      month: d.toLocaleDateString("en-GB", { month: "short" }),
+    };
   });
 }
 
-function Skeleton() {
+/** Small tricolor badge used for the Indian science section. */
+function Tricolor() {
   return (
-    <div className="divide-y divide-line border-t border-line" aria-busy="true" aria-label="Researching this date">
+    <span className="relative inline-flex h-5 w-5 flex-col overflow-hidden rounded-full ring-1 ring-black/10 dark:ring-white/20" aria-hidden="true">
+      <i className="flex-1 bg-[#FF9933]" />
+      <i className="flex-1 bg-white" />
+      <i className="flex-1 bg-[#138808]" />
+      <i className="absolute left-1/2 top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#000080]" />
+    </span>
+  );
+}
+
+function SectionHeader({ icon, title, subtitle, count }) {
+  return (
+    <div className="mb-4 mt-12 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-soft text-accent">{icon}</span>
+        <div>
+          <h2 className="text-[15px] font-semibold leading-tight tracking-tight">{title}</h2>
+          <p className="text-xs text-muted">{subtitle}</p>
+        </div>
+      </div>
+      {count > 0 && (
+        <span className="rounded-full border border-line px-2.5 py-1 text-xs tabular-nums text-muted">
+          {count} {count === 1 ? "event" : "events"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function EventCard({ ev, i }) {
+  const meta = CATEGORY_META[ev.category] || CATEGORY_META.Physics;
+  return (
+    <article
+      className="fade-up rounded-2xl border border-line bg-card p-5 transition-shadow duration-200 hover:shadow-[0_10px_30px_-14px_rgba(15,17,23,0.25)] sm:p-6"
+      style={{ animationDelay: `${i * 60}ms` }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="chip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style={{ "--h": meta.hue }}>
+          <Icon name={meta.icon} size={14} />
+          {ev.category}
+        </span>
+        <span className="rounded-full border border-line px-2.5 py-1 text-xs tabular-nums text-muted">{ev.year}</span>
+      </div>
+      <h3 className="mt-4 font-serif text-[1.4rem] font-medium leading-snug tracking-tight">{ev.title}</h3>
+      <p className="mt-2.5 text-[15px] leading-[1.75] text-body">{ev.summary}</p>
+    </article>
+  );
+}
+
+function SkeletonCards() {
+  return (
+    <div className="space-y-3" aria-busy="true" aria-label="Researching this date">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="py-7 space-y-3">
-          <div className="skeleton h-3 w-20" />
+        <div key={i} className="space-y-3 rounded-2xl border border-line bg-card p-6">
+          <div className="flex justify-between"><div className="skeleton h-6 w-24 !rounded-full" /><div className="skeleton h-6 w-14 !rounded-full" /></div>
           <div className="skeleton h-5 w-2/3" />
           {[100, 96, 92, 58].map((w) => <div key={w} className="skeleton h-3" style={{ width: `${w}%` }} />)}
         </div>
@@ -65,39 +121,44 @@ export default function EurekaApp() {
     try { localStorage.setItem("theme", next ? "dark" : "light"); } catch {}
   };
 
-  const heading = active
-    ? fromISO(active).toLocaleDateString("en-GB", { day: "numeric", month: "long" })
-    : "";
+  const date = active ? fromISO(active) : null;
+  const heading = date ? date.toLocaleDateString("en-GB", { day: "numeric", month: "long" }) : "";
+  const weekday = date ? date.toLocaleDateString("en-GB", { weekday: "long" }) : "";
+  const ready = state.status === "ready";
+  const world = ready ? state.data.events || [] : [];
+  const india = ready ? state.data.india || [] : [];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-16">
-        {/* Header: wordmark + theme toggle */}
-        <header className="flex items-center justify-between py-6">
-          <div className="flex items-center gap-2 text-xl font-medium tracking-tight">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8"
-              strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" />
-            </svg>
-            Eureka Daily
-          </div>
-          <button onClick={toggleTheme} aria-label="Toggle dark mode"
-            className="font-sans text-xs text-muted hover:text-ink transition-colors">
-            {dark ? "Light mode" : "Dark mode"}
+    <div className="flex min-h-screen flex-col">
+      {/* Sticky header */}
+      <header className="glass sticky top-0 z-20 border-b border-line">
+        <div className="mx-auto flex h-16 w-full max-w-[720px] items-center justify-between px-5">
+          <a href="/" className="flex items-center gap-2.5" aria-label="Eureka Daily home">
+            <Logo size={30} />
+            <span className="text-[17px] font-semibold tracking-tight">Eureka <span className="text-muted font-medium">Daily</span></span>
+          </a>
+          <button onClick={toggleTheme} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-muted transition-colors hover:text-ink hover:bg-soft">
+            <Icon name={dark ? "sun" : "moon"} size={17} />
           </button>
-        </header>
+        </div>
+      </header>
 
-        {/* Date strip: underlined tabs, scrolls sideways on small screens */}
-        <nav aria-label="Choose a day" className="-mx-5 px-5 overflow-x-auto border-b border-line">
-          <ul className="flex gap-6 w-max">
+      <main className="mx-auto w-full max-w-[720px] flex-1 px-5 pb-20">
+        {/* Day picker */}
+        <nav aria-label="Choose a day" className="-mx-5 overflow-x-auto px-5 pt-6 pb-1">
+          <ul className="flex w-max gap-2">
             {days.map((d) => {
               const on = d.iso === active;
               return (
                 <li key={d.iso}>
                   <button onClick={() => setActive(d.iso)} aria-current={on ? "date" : undefined}
-                    className={`font-sans text-[13px] py-3 -mb-px border-b-2 whitespace-nowrap transition-colors ${
-                      on ? "border-accent text-ink font-medium" : "border-transparent text-muted hover:text-ink"}`}>
-                    {d.label}
+                    className={`flex w-[62px] flex-col items-center rounded-2xl border py-2.5 transition-all ${
+                      on ? "border-transparent bg-accent text-white shadow-md"
+                         : "border-line bg-card text-muted hover:text-ink hover:border-accent"}`}>
+                    <span className={`text-[11px] font-medium uppercase tracking-wide ${on ? "text-white/80" : ""}`}>{d.top}</span>
+                    <span className={`mt-0.5 text-xl font-semibold tabular-nums ${on ? "text-white" : "text-ink"}`}>{d.num}</span>
+                    <span className={`text-[11px] ${on ? "text-white/80" : ""}`}>{d.month}</span>
                   </button>
                 </li>
               );
@@ -106,49 +167,63 @@ export default function EurekaApp() {
         </nav>
 
         {/* Selected date */}
-        <section className="pt-12 pb-9">
-          <h1 className="text-5xl sm:text-6xl font-normal tracking-tight">{heading || "\u00A0"}</h1>
-          <p className="mt-3 text-lg text-muted leading-snug min-h-[1.75rem]">
-            {state.status === "ready" ? state.data.intro : ""}
+        <section className="pt-10 pb-2">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.12em] text-accent">
+            <Icon name="calendar" size={14} /> {weekday || "\u00A0"}
           </p>
+          <h1 className="mt-2 font-serif text-5xl font-normal tracking-tight sm:text-6xl">{heading || "\u00A0"}</h1>
+          <p className="mt-3 min-h-[1.75rem] text-[17px] leading-snug text-muted">{ready ? state.data.intro : ""}</p>
         </section>
 
-        {state.status === "loading" && <Skeleton />}
+        {state.status === "loading" && (
+          <>
+            <SectionHeader icon={<Icon name="globe" size={18} />} title="Around the world" subtitle="Researching this date…" />
+            <SkeletonCards />
+          </>
+        )}
 
         {state.status === "error" && (
-          <div className="border-t border-line pt-8">
-            <p className="text-lg">We couldn’t gather this day’s science just yet.</p>
-            <p className="text-muted mt-1">The research step hit a snag. Try again in a moment.</p>
-            {state.detail && (
-              <p className="font-sans text-xs text-muted mt-3 break-words">Details: {state.detail}</p>
-            )}
-            <button onClick={() => load(active)}
-              className="mt-5 font-sans text-sm text-accent hover:underline underline-offset-4">
-              Try again
-            </button>
+          <div className="mt-10 rounded-2xl border border-line bg-card p-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 text-accent"><Icon name="alert" size={20} /></span>
+              <div className="min-w-0">
+                <p className="font-medium">We couldn’t gather this day’s science just yet.</p>
+                <p className="mt-1 text-sm text-muted">The research step hit a snag. Try again in a moment.</p>
+                {state.detail && <p className="mt-3 break-words text-xs text-muted">Details: {state.detail}</p>}
+                <button onClick={() => load(active)}
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90">
+                  <Icon name="refresh" size={15} /> Try again
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {state.status === "ready" && (
-          <div className="divide-y divide-line border-t border-line">
-            {state.data.events.map((ev, i) => (
-              <article key={i} className="py-7">
-                <div className="flex items-center justify-between font-sans text-xs">
-                  <span className="text-muted">{ev.year}</span>
-                  <span className="text-accent">{ev.category}</span>
-                </div>
-                <h2 className="mt-2.5 text-2xl leading-snug font-medium">{ev.title}</h2>
-                <p className="mt-2.5 text-[1.075rem] leading-[1.7]">{ev.summary}</p>
-              </article>
-            ))}
-          </div>
+        {ready && (
+          <>
+            <SectionHeader icon={<Icon name="globe" size={18} />} title="Around the world"
+              subtitle="Science on this day, globally" count={world.length} />
+            <div className="space-y-3">{world.map((ev, i) => <EventCard key={`w${i}`} ev={ev} i={i} />)}</div>
+
+            <SectionHeader icon={<Tricolor />} title="Indian science"
+              subtitle="Discoveries, scientists and missions from India" count={india.length} />
+            {india.length > 0 ? (
+              <div className="space-y-3">{india.map((ev, i) => <EventCard key={`i${i}`} ev={ev} i={i} />)}</div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-line px-6 py-8 text-center text-sm text-muted">
+                No verified Indian science events found for this day.
+              </div>
+            )}
+          </>
         )}
       </main>
 
       <footer className="border-t border-line py-6 text-center text-sm text-muted">
-        Built with love ❤️ by{" "}
-        <a href="https://harsheel.vercel.app" target="_blank" rel="noopener noreferrer"
-          className="hover:text-accent hover:underline underline-offset-4">Harsheel</a>
+        <span className="inline-flex items-center gap-1.5">
+          Built with <Icon name="heart" size={14} className="fill-current text-rose-500" /> by{" "}
+          <a href="https://harsheel.vercel.app" target="_blank" rel="noopener noreferrer"
+            className="underline-offset-4 hover:text-accent hover:underline">Harsheel</a>
+        </span>
       </footer>
     </div>
   );
